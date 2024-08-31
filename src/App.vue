@@ -2,6 +2,7 @@
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import SelectFile from "./components/SelectFile.vue";
+import 'bootstrap/dist/css/bootstrap.min.css';
 </script>
 
 <template>
@@ -37,8 +38,6 @@ import SelectFile from "./components/SelectFile.vue";
 }
 
 .container {
-  margin: 0;
-  padding-top: 10vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
