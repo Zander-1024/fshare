@@ -72,7 +72,7 @@ async fn generate_url(
         }
         let file_name = &file.path.file_name().unwrap().to_str();
         let out_url = format!(
-            "http://{}/get_file/{:?}/{}",
+            "http://{}/downloadfile/{:?}/{}",
             local_ip,
             uuid,
             file_name.unwrap()
@@ -98,30 +98,23 @@ async fn get_data(
             Err(_) => None,
         }
     };
-
-    match file_path {
-        None => (
-            [
-                (header::CONTENT_TYPE, "text/html; charset=utf-8".to_string()),
-                (header::SERVER, "axum".to_string()),
-            ],
-            Body::from("invalid path".to_string()),
+    let headers = [
+        (
+            header::CONTENT_TYPE,
+            "text/plain; charset=utf-8".to_string(),
         ),
+        (header::CONTENT_TYPE, "application/download".to_string()),
+        (
+            header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"{}\"", file_name),
+        ),
+    ];
+    match file_path {
+        None => (headers, Body::from("invalid path".to_string())),
         Some(path) => {
             let file = tokio::fs::File::open(path).await.unwrap();
             let stream = tokio_util::io::ReaderStream::new(file);
             let body = Body::from_stream(stream);
-
-            let headers = [
-                (
-                    header::CONTENT_TYPE,
-                    "text/plain; charset=utf-8".to_string(),
-                ),
-                (
-                    header::CONTENT_DISPOSITION,
-                    format!("attachment; filename=\"{}\"", file_name),
-                ),
-            ];
 
             (headers, body)
         }

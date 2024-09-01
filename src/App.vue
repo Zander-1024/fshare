@@ -7,6 +7,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 <template>
   <div class="container">
+    <h1>File Share Tool</h1>
+
     <SelectFile />
 
   </div>
