@@ -2,14 +2,14 @@
     <div class="container text-center form-container">
         <form class="row mb-4" @submit.prevent="handleSubmit">
             <div class="col-12">
-                <input id="path-input" class="form-control mx-auto my-auto" v-model="file_path"
+                <input id="path-input" type="text" class="form-control mx-auto my-auto"  @click="openFileDialog" v-model="file_path"
                     placeholder="输入文件路径..." />
             </div>
         </form>
         <div class="canvas-container mt-4">
             <canvas id="canvas"></canvas>
         </div>
-        <div v-if="file_url" class="path-info">当前文件路径: {{ file_path }}</div>
+        <div v-if="file_url" class="path-info">分享链接: {{ file_url }}</div>
     </div>
 </template>
 
@@ -18,6 +18,7 @@ import { ref, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { dialog } from '@tauri-apps/api';
 import QRCode from 'qrcode';
+import { open } from '@tauri-apps/api/dialog';
 
 const file_path = ref('');
 const file_url = ref('');
@@ -30,8 +31,18 @@ onMounted(async () => {
 async function showAlert(message) {
     await dialog.message(message);
 }
+async function openFileDialog() {
+    const selected = await open({ directory: false, multiple: false });
+    if (selected === null) {
+        await dialog.message("No file selected.");
+    } else {
+        file_path.value = selected;
+
+    }
+}
 
 async function handleSubmit() {
+    // Open a selection dialog for image files
     if (!file_path.value) {
         showAlert('请先选择一个文件');
         return;

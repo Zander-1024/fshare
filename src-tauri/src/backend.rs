@@ -38,7 +38,7 @@ pub async fn app(port: u16) {
 
     let app = Router::new()
         .route("/generate_url", post(generate_url))
-        .route("/downloadfile/:uuid/:file_name", get(get_data))
+        .route("/downloadfile/:uuid", get(get_data))
         .layer(Extension(local_ip_port))
         .layer(cors)
         .with_state(db);
@@ -70,13 +70,7 @@ async fn generate_url(
         if let Ok(mut map) = data.write() {
             map.insert(uuid.clone(), file.path.clone());
         }
-        let file_name = &file.path.file_name().unwrap().to_str();
-        let out_url = format!(
-            "http://{}/downloadfile/{:?}/{}",
-            local_ip,
-            uuid,
-            file_name.unwrap()
-        );
+        let out_url = format!("http://{}/downloadfile/{:?}", local_ip, uuid);
 
         Ok(Json(Url { url: out_url }))
     } else {
@@ -85,38 +79,32 @@ async fn generate_url(
 }
 
 #[debug_handler]
-async fn get_data(
-    State(data): State<DB>,
-    Path((uuid, file_name)): Path<(Uuid, String)>,
-) -> impl IntoResponse {
+async fn get_data(State(data): State<DB>, Path(uuid): Path<Uuid>) -> impl IntoResponse {
     let file_path = {
         match data.read() {
             Ok(map) => {
                 let file = map.get(&uuid).unwrap();
-                Some(file.clone())
+                file.clone()
             }
-            Err(_) => None,
+            Err(_) => return Err((StatusCode::NOT_FOUND, "File not found")),
         }
     };
+    let file_name = file_path.file_name().unwrap().to_str().unwrap();
+
     let headers = [
         (
             header::CONTENT_TYPE,
             "text/plain; charset=utf-8".to_string(),
         ),
-        (header::CONTENT_TYPE, "application/download".to_string()),
         (
             header::CONTENT_DISPOSITION,
             format!("attachment; filename=\"{}\"", file_name),
         ),
     ];
-    match file_path {
-        None => (headers, Body::from("invalid path".to_string())),
-        Some(path) => {
-            let file = tokio::fs::File::open(path).await.unwrap();
-            let stream = tokio_util::io::ReaderStream::new(file);
-            let body = Body::from_stream(stream);
 
-            (headers, body)
-        }
-    }
+    let file = tokio::fs::File::open(file_path).await.unwrap();
+    let stream = tokio_util::io::ReaderStream::new(file);
+    let body = Body::from_stream(stream);
+
+    Ok((headers, body))
 }
