@@ -2,14 +2,16 @@
     <div class="container text-center form-container">
         <form class="row mb-4" @submit.prevent="handleSubmit">
             <div class="col-12">
-                <input id="path-input" type="text" class="form-control mx-auto my-auto"  @click="openFileDialog" v-model="file_path"
-                    placeholder="输入文件路径..." />
+                <input id="path-input" type="text" class="form-control mx-auto my-auto" @click="openFileDialog"
+                    v-model="file_path" placeholder="输入文件路径..." />
             </div>
         </form>
         <div class="canvas-container mt-4">
             <canvas id="canvas"></canvas>
         </div>
-        <div v-if="file_url" class="path-info">分享链接: {{ file_url }}</div>
+        <div v-if="file_url" class="path-info">
+            分享链接: <a :href="file_url" >{{ file_url }}</a>
+        </div>
     </div>
 </template>
 
@@ -17,9 +19,8 @@
 import { ref, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { dialog } from '@tauri-apps/api';
-import QRCode from 'qrcode';
 import { open } from '@tauri-apps/api/dialog';
-
+import QRCode from 'qrcode';
 const file_path = ref('');
 const file_url = ref('');
 const port = ref(0);
@@ -82,10 +83,10 @@ async function handleSubmit() {
     margin-top: 50px;
     /* 顶部留出一些空间 */
 }
+
 .canvas-container {
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
 </style>
