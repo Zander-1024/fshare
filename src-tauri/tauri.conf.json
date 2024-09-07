@@ -16,6 +16,9 @@
         "all": false,
         "open": true
       },
+      "clipboard": {
+        "all": true
+      },
       "dialog": {
         "all": true
       }
